@@ -1,0 +1,26 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "tsx --watch server.ts",
+    "start": "tsx server.ts",
+    "db:culturalheritage": "npm run db:culturalheritage:download && npm run db:culturalheritage:import",
+    "db:culturalheritage:download": "download --extract --out tmp/ https://nedlasting.geonorge.no/geonorge/Kulturminner/Kulturminner/PostGIS/Kulturminner_0000_Norge_25833_Kulturminner_PostGIS.zip",
+    "db:culturalheritage:import": "docker exec -i /postgis /usr/bin/psql --user postgres < tmp/Kulturminner_0000_Norge_25833_Kulturminner_PostGIS.sql"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@hono/node-server": "^1.14.1",
+    "hono": "^4.7.8",
+    "pg": "^8.15.6"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.11.14",
+    "tsx": "^4.19.4"
+  }
+}
