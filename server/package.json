@@ -5,10 +5,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "tsx --watch server.ts",
-    "start": "tsx server.ts",
-    "db:culturalheritage": "npm run db:culturalheritage:download && npm run db:culturalheritage:import",
-    "db:culturalheritage:download": "download --extract --out tmp/ https://nedlasting.geonorge.no/geonorge/Kulturminner/Kulturminner/PostGIS/Kulturminner_0000_Norge_25833_Kulturminner_PostGIS.zip",
-    "db:culturalheritage:import": "docker exec -i /postgis /usr/bin/psql --user postgres < tmp/Kulturminner_0000_Norge_25833_Kulturminner_PostGIS.sql"
+    "start": "tsx server.ts"
   },
   "keywords": [],
   "author": "",

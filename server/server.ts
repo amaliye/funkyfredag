@@ -1,38 +1,50 @@
-/*
-
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
 import pg from "pg";
-import { serveStatic } from "@hono/node-server/serve-static";
 
-// When you run `heroku addons:create heroku-postgresql` (below),
-// Heroku will provide `DATABASE_URL` as an envionment variable.
-// If this doesn't exist, we assume we're running on localhost with docker-compose
 const connectionString = process.env.DATABASE_URL;
 const postgresql = connectionString
   ? new pg.Pool({ connectionString, ssl: { rejectUnauthorized: false } })
-  : // If you choose a diffent password in `docker-compose.yaml` you must update here as well
-    new pg.Pool({ user: "postgres", password: "postgres" });
+  : new pg.Pool({ user: "postgres", password: "postgres" });
+
+const schema = "kulturminner_7a5c3d44675b4cefa41950d09bbe7f50";
 
 const app = new Hono();
+
+// ✅ CORS middleware
+app.use("*", async (c, next) => {
+  c.header("Access-Control-Allow-Origin", "http://localhost:5173");
+  c.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  c.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  if (c.req.method === "OPTIONS") {
+    return c.body(null, 200);
+  }
+
+  return await next();
+});
+
+// ✅ API endpoint
 app.get("/api/culturalheritage", async (c) => {
-  const result = await postgresql.query("select * ::json from kulturminner");
+  const result = await postgresql.query(`
+      SELECT navn, opphav, informasjon, 
+             ST_AsGeoJSON(ST_Transform(lokalitet.omrade, 4326)) AS geometry
+      FROM ${schema}.lokalitet
+      WHERE synlig = true
+      LIMIT 9000
+    `);
+
   return c.json({
     type: "FeatureCollection",
-    crs: { type: "name", properties: { name: "ESPG:4326" } },
-    features: result.rows.map(
-      // Returns GeoJSON features where each feature has the geometry from the SQL
-      //  and includes all additional columns in the query as properties
-      ({ geometry: { coordinates, type }, ...properties }) => ({
-        type: "Feature",
-        geometry: { type, coordinates },
-        properties,
-      }),
-    ),
+    crs: {
+      type: "name",
+    },
+    features: result.rows.map(({ geometry, ...props }) => ({
+      type: "Feature",
+      properties: props,
+      geometry: JSON.parse(geometry),
+    })),
   });
 });
-app.use("*", serveStatic({ root: "../dist" }));
 
-const port = process.env.PORT ? parseInt(process.env.PORT) : 3000;
-serve({ fetch: app.fetch, port });
-*/
+serve(app);
